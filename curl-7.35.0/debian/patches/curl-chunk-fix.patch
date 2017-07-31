@@ -1,0 +1,32 @@
+From 0ab97ba0090f2609760c33000181f08757336a48 Mon Sep 17 00:00:00 2001
+From: Daniel Stenberg <daniel@haxx.se>
+Date: Wed, 12 Feb 2014 14:33:17 +0100
+Subject: [PATCH] chunked decoder: track overflows correctly
+
+The code didn't properly check the return codes to detect overflows so
+it could trigger incorrectly. Like on mingw32.
+
+Regression introduced in 345891edba (curl 7.35.0)
+
+Bug: http://curl.haxx.se/mail/lib-2014-02/0097.html
+Reported-by: LM
+Bug-LP: #1613698
+---
+ lib/http_chunks.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/lib/http_chunks.c b/lib/http_chunks.c
+index 47de958..83e3f0e 100644
+--- a/lib/http_chunks.c
++++ b/lib/http_chunks.c
+@@ -162,8 +162,8 @@ CHUNKcode Curl_httpchunk_read(struct connectdata *conn,
+         }
+ 
+         ch->datasize=curlx_strtoofft(ch->hexbuffer, &endptr, 16);
+-        if(errno == ERANGE)
+-          /* over or underflow is an error */
++        if((ch->datasize == CURL_OFF_T_MAX) && (errno == ERANGE))
++          /* overflow is an error */
+           return CHUNKE_ILLEGAL_HEX;
+         ch->state = CHUNK_LF; /* now wait for the CRLF */
+       }

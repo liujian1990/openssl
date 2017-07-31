@@ -1,0 +1,23 @@
+commit 52d16c84d21ceb670914b56275b579535b271550
+Author: Daniel Stenberg <daniel@haxx.se>
+Date:   Mon May 12 13:04:27 2014 +0200
+
+    openssl: unbreak PKCS12 support
+    
+    Regression introduced in ce362e8eb9c (7.31.0)
+    
+    Bug: http://curl.haxx.se/bug/view.cgi?id=1371
+    Reported-by: Dmitry
+
+diff --git a/lib/vtls/openssl.c b/lib/vtls/openssl.c
+index 5a66566..d13436d 100644
+--- a/lib/vtls/openssl.c
++++ b/lib/vtls/openssl.c
+@@ -538,6 +538,7 @@ int cert_stuff(struct connectdata *conn,
+ 
+       if(!cert_done)
+         return 0; /* failure! */
++      break;
+ #else
+       failf(data, "file type P12 for certificate not supported");
+       return 0;
